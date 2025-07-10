@@ -20,14 +20,16 @@ fn main() {
         .y_label("Y Axis")
         .legend(Legend::TopRightOutside)
         .grid(Grid::Dashed)
-        .data([Series::builder()
-            .name("Lissajous Curve")
-            .color("Red")
-            .data(scatter_data())
-            .marker(Marker::Circle)
-            .marker_size(5.0)
-            .line(Line::None)
-            .build()])
+        .data(vec![
+            Series::builder()
+                .name("Lissajous Curve")
+                .color("Red")
+                .data(scatter_data())
+                .marker(Marker::Circle)
+                .marker_size(5.0)
+                .line(Line::None)
+                .build(),
+        ])
         .build();
     scatter_plot.to_svg("./gallery/scatter.svg").unwrap();
 }

@@ -83,7 +83,7 @@ fn main() {
         .legend(Legend::TopRightOutside)
         .grid(Grid::Solid)
         .font("Arial")
-        .data([
+        .data(vec![
             Series::builder()
                 .name("Temperature (°F)")
                 .color("Red")
@@ -108,13 +108,13 @@ fn main() {
     // Render the plot to SVG
     match weather_plot.to_svg("./gallery/weather.svg") {
         Ok(_) => println!("Weather plot created successfully at ./gallery/weather.svg"),
-        Err(e) => eprintln!("Error creating plot: {:?}", e),
+        Err(e) => eprintln!("Error creating plot: {e:?}"),
     }
 
     // Optionally, render to PNG with feature = ["png"]
     #[cfg(feature = "png")]
     match weather_plot.to_png("./gallery/weather.png", 2.0) {
         Ok(_) => println!("Weather plot created successfully at ./gallery/weather.png"),
-        Err(e) => eprintln!("Error creating plot: {:?}", e),
+        Err(e) => eprintln!("Error creating plot: {e:?}"),
     }
 }

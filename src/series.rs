@@ -1,4 +1,4 @@
-use crate::{Interpolation, Line, Marker, Color};
+use crate::{Color, Interpolation, Line, Marker};
 use bon::Builder;
 
 #[derive(Clone, Builder)]
@@ -18,6 +18,8 @@ pub struct Series<'a, T = f32> {
     pub line_width: f32,
     #[builder(default = Interpolation::Linear)]
     pub interpolation: Interpolation,
+    #[builder(default = true)]
+    pub show_legend: bool,
 }
 
 impl<'a, T> Default for Series<'a, T> {

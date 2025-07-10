@@ -14,7 +14,7 @@ fn main() {
         .legend(Legend::TopLeftInside)
         .grid(Grid::Dotted)
         .font("Times New Roman")
-        .data([
+        .data(vec![
             Series::builder()
                 .name("Low-Risk Investment")
                 .color(Color::Green) // Note "Green" is also valid
@@ -78,6 +78,6 @@ fn main() {
     // Plot the data to a PNG file in the gallery
     match plot.to_svg("./gallery/investment_growth.svg") {
         Ok(_) => println!("Plot created successfully at ./gallery/investment_growth.svg"),
-        Err(e) => eprintln!("Error creating plot: {:?}", e),
+        Err(e) => eprintln!("Error creating plot: {e:?}"),
     }
 }

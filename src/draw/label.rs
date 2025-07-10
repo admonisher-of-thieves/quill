@@ -29,6 +29,7 @@ pub fn draw_title(
     document
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn draw_x_label(
     document: Document,
     x_label: &str,
@@ -80,7 +81,7 @@ pub fn draw_y_label(
             .set("dominant-baseline", "middle")
             .set(
                 "transform",
-                format!("rotate(-90, {}, {})", y_label_text_x, y_label_text_y),
+                format!("rotate(-90, {y_label_text_x}, {y_label_text_y})"),
             )
             .add(SvgNodeText::new(y_label));
         return document.add(y_label_svg);

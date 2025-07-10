@@ -5,6 +5,7 @@ use svg::Document;
 use svg::node::Text as SvgNodeText;
 use svg::node::element::{Rectangle, Text};
 
+#[allow(clippy::too_many_arguments)]
 pub fn draw_legend<T: PlotValue>(
     document: Document,
     data: &[Series<T>],
@@ -24,7 +25,7 @@ pub fn draw_legend<T: PlotValue>(
         .set("stroke", legend_config.border_color.to_hex_string())
         .set("stroke-width", 1.0);
     let mut document = document.add(legend_box_svg);
-    for (i, series) in data.iter().enumerate() {
+    for (i, series) in data.iter().enumerate().filter(|(_, s)| s.show_legend) {
         let item_base_y =
             legend_y_base + legend_config.padding + i as f32 * legend_config.item_height;
         let swatch_x = legend_x_base + legend_config.padding;

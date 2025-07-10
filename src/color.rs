@@ -1,6 +1,8 @@
 #[derive(Debug, Clone, PartialEq)]
+#[derive(Default)]
 pub enum Color {
     // Popular colors with their RGB values
+    #[default]
     Black,
     White,
     Red,
@@ -115,12 +117,12 @@ impl Color {
     
     pub fn to_hex_string(&self) -> String {
         let (r, g, b) = self.to_rgb();
-        format!("#{:02x}{:02x}{:02x}", r, g, b)
+        format!("#{r:02x}{g:02x}{b:02x}")
     }
     
     pub fn to_rgb_string(&self) -> String {
         let (r, g, b) = self.to_rgb();
-        format!("rgb({}, {}, {})", r, g, b)
+        format!("rgb({r}, {g}, {b})")
     }
     
     /// Create an RGB color
@@ -131,12 +133,6 @@ impl Color {
     /// Create a hex color
     pub fn hex(hex_str: &str) -> Self {
         Color::Hex(hex_str.to_string())
-    }
-}
-
-impl Default for Color {
-    fn default() -> Self {
-        Color::Black
     }
 }
 

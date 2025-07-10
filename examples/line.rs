@@ -18,13 +18,15 @@ fn main() {
         .y_label("Y Axis")
         .legend(Legend::TopRightOutside)
         .grid(Grid::Solid)
-        .data([Series::builder()
-            .name("Sine Curve")
-            .color(Color::Blue)
-            .data(line_data())
-            .marker(Marker::None)
-            .line(Line::Solid)
-            .build()])
+        .data(vec![
+            Series::builder()
+                .name("Sine Curve")
+                .color(Color::Blue)
+                .data(line_data())
+                .marker(Marker::None)
+                .line(Line::Solid)
+                .build(),
+        ])
         .build();
     line_plot.to_svg("./gallery/line.svg").unwrap();
 }

@@ -1,4 +1,4 @@
-use crate::elements::{Axis, Grid, Scale, Tick, MinorGrid};
+use crate::elements::{Axis, Grid, MinorGrid, Scale, Tick};
 use crate::style::*;
 use svg::Document;
 use svg::node::Text as SvgNodeText;
@@ -7,20 +7,20 @@ use svg::node::element::{Line as SvgLine, Text};
 /// Generate minor tick values for logarithmic scale between major ticks
 fn generate_minor_log_ticks(major_ticks: &[f32]) -> Vec<f32> {
     let mut minor_ticks = Vec::new();
-    
+
     for i in 0..major_ticks.len().saturating_sub(1) {
         let current_major = major_ticks[i];
         let next_major = major_ticks[i + 1];
-        
+
         // Calculate the order of magnitude for current major tick
         if current_major > 0.0 && next_major > 0.0 {
             let current_log = current_major.log10();
             let next_log = next_major.log10();
-            
+
             // Only add minor ticks if we're moving by exactly one order of magnitude
             if (next_log - current_log - 1.0).abs() < 0.1 {
                 let magnitude = 10.0_f32.powi(current_log.floor() as i32);
-                
+
                 // Add minor ticks at 2×10^n, 3×10^n, ..., 9×10^n
                 for factor in 2..=9 {
                     let minor_tick = (factor as f32) * magnitude;
@@ -31,29 +31,30 @@ fn generate_minor_log_ticks(major_ticks: &[f32]) -> Vec<f32> {
             }
         }
     }
-    
+
     minor_ticks
 }
 
 /// Generate minor tick values for linear scales between major ticks
 fn generate_minor_linear_ticks(major_ticks: &[f32], num_minor_per_major: usize) -> Vec<f32> {
     let mut minor_ticks = Vec::new();
-    
+
     for i in 0..major_ticks.len().saturating_sub(1) {
         let current_major = major_ticks[i];
         let next_major = major_ticks[i + 1];
         let interval = (next_major - current_major) / (num_minor_per_major + 1) as f32;
-        
+
         // Add minor ticks between current and next major tick
         for j in 1..=num_minor_per_major {
             let minor_tick = current_major + interval * j as f32;
             minor_ticks.push(minor_tick);
         }
     }
-    
+
     minor_ticks
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn draw_ticks_and_grids<FX, FY>(
     document: Document,
     axis: Axis,
@@ -95,7 +96,7 @@ where
         }
         _ => Vec::new(),
     };
-    
+
     let y_minor_ticks = match minor_grid {
         MinorGrid::YAxis | MinorGrid::Both => {
             match y_scale {
@@ -202,11 +203,10 @@ where
                     let scaled_val_check = temp_max / 10.0_f32.powi(current_power);
                     if scaled_val_check >= 1000.0 {
                         current_power += 3;
-                    } else if scaled_val_check < 1.0 && scaled_val_check > 0.0 {
-                        if current_power == 0 && scaled_val_check < 1.0 {
-                            let sub_exp = scaled_val_check.log10().floor() as i32;
-                            current_power = ((sub_exp - 2) / 3) * 3;
-                        }
+                    } else if scaled_val_check < 1.0 && scaled_val_check > 0.0 && current_power == 0
+                    {
+                        let sub_exp = scaled_val_check.log10().floor() as i32;
+                        current_power = ((sub_exp - 2) / 3) * 3;
                     }
                 }
 
@@ -282,15 +282,16 @@ where
                                 if (log_value.round() - log_value).abs() < 0.001 {
                                     let exponent = log_value.round() as i32;
                                     // Always use scientific notation: "10^exponent"
-                                    format!("10^{}", exponent)
+                                    format!("10^{exponent}")
                                 } else {
                                     // For intermediate values, use coefficient·10^exponent format
-                                    let coefficient = tick_val / 10.0_f32.powi(log_value.floor() as i32);
+                                    let coefficient =
+                                        tick_val / 10.0_f32.powi(log_value.floor() as i32);
                                     let exponent = log_value.floor() as i32;
                                     if (coefficient - 1.0).abs() < 0.001 {
-                                        format!("10^{}", exponent)
+                                        format!("10^{exponent}")
                                     } else {
-                                        format!("{:.1}·10^{}", coefficient, exponent)
+                                        format!("{coefficient:.1}·10^{exponent}")
                                     }
                                 }
                             }
@@ -299,18 +300,21 @@ where
                         };
 
                         // Handle logarithmic labels with proper superscript formatting for x-axis
-                        if x_scale == Scale::Log && (tick_label_text_bottom.contains("10^") || tick_label_text_bottom.contains("·10^")) {
+                        if x_scale == Scale::Log
+                            && (tick_label_text_bottom.contains("10^")
+                                || tick_label_text_bottom.contains("·10^"))
+                        {
                             // Handle both "10^exponent" and "coefficient·10^exponent" formats
                             if let Some(cap) = tick_label_text_bottom.strip_prefix("10^") {
                                 // Simple "10^exponent" format
                                 let exponent = cap.parse::<i32>().unwrap_or(0);
-                                
+
                                 let base_text_node = SvgNodeText::new("10");
                                 let exponent_tspan = svg::node::element::TSpan::new()
                                     .set("dy", "-0.4em") // Shift exponent upwards
                                     .set("dx", "-0.2em") // Shift left to align with base
                                     .add(SvgNodeText::new(exponent.to_string()));
-                                
+
                                 let tick_label_svg_bottom = Text::new()
                                     .set("x", screen_x)
                                     .set("y", tick_y_bottom + tick_label_offset)
@@ -327,13 +331,13 @@ where
                                 let coefficient = &tick_label_text_bottom[..pos];
                                 let exponent_str = &tick_label_text_bottom[pos + 4..]; // Skip "·10^"
                                 let exponent = exponent_str.parse::<i32>().unwrap_or(0);
-                                
-                                let base_text_node = SvgNodeText::new(&format!("{}·10", coefficient));
+
+                                let base_text_node = SvgNodeText::new(format!("{coefficient}·10"));
                                 let exponent_tspan = svg::node::element::TSpan::new()
                                     .set("dy", "-0.4em") // Shift exponent upwards
                                     .set("dx", "-0.2em") // Shift left to align with base
                                     .add(SvgNodeText::new(exponent.to_string()));
-                                
+
                                 let tick_label_svg_bottom = Text::new()
                                     .set("x", screen_x)
                                     .set("y", tick_y_bottom + tick_label_offset)
@@ -420,8 +424,17 @@ where
             .add(SvgNodeText::new(exponent_str.to_string()));
 
         let scale_label_svg = Text::new()
-            .set("x", plot_area_x_start + plot_area_width - tick_config.text_padding)
-            .set("y", plot_area_y_start + plot_area_height + tick_config.font_size + tick_config.text_padding * 2.0)
+            .set(
+                "x",
+                plot_area_x_start + plot_area_width - tick_config.text_padding,
+            )
+            .set(
+                "y",
+                plot_area_y_start
+                    + plot_area_height
+                    + tick_config.font_size
+                    + tick_config.text_padding * 2.0,
+            )
             .set("font-family", font)
             .set("font-size", tick_config.font_size)
             .set("fill", tick_label_color_svg.clone())
@@ -450,7 +463,7 @@ where
                             .set("y2", plot_area_y_start + plot_area_height)
                             .set("stroke", minor_grid_color_svg.clone())
                             .set("stroke-width", grid_config.minor_line_width);
-                        
+
                         // Apply the same dash pattern as the major grid
                         match grid {
                             Grid::Dotted => {
@@ -461,7 +474,7 @@ where
                             }
                             Grid::Solid | Grid::None => {}
                         }
-                        
+
                         document = document.add(minor_grid_line);
                     }
                 }
@@ -477,7 +490,10 @@ where
                             .set("x1", screen_x)
                             .set("y1", tick_y_bottom)
                             .set("x2", screen_x)
-                            .set("y2", tick_y_bottom + tick_config.minor_tick_length * tick_direction)
+                            .set(
+                                "y2",
+                                tick_y_bottom + tick_config.minor_tick_length * tick_direction,
+                            )
                             .set("stroke", minor_tick_color_svg.clone())
                             .set("stroke-width", 0.5);
                         document = document.add(minor_tick_line_bottom);
@@ -489,7 +505,10 @@ where
                         .set("x1", screen_x)
                         .set("y1", tick_y_top)
                         .set("x2", screen_x)
-                        .set("y2", tick_y_top - tick_config.minor_tick_length * tick_direction)
+                        .set(
+                            "y2",
+                            tick_y_top - tick_config.minor_tick_length * tick_direction,
+                        )
                         .set("stroke", minor_tick_color_svg.clone())
                         .set("stroke-width", 0.5);
                     document = document.add(minor_tick_line_top);
@@ -571,45 +590,41 @@ where
                         if (log_value.round() - log_value).abs() < 0.001 {
                             let exponent = log_value.round() as i32;
                             // Always use scientific notation: "10^exponent"
-                            format!("10^{}", exponent)
+                            format!("10^{exponent}")
                         } else {
                             // For intermediate values, use coefficient·10^exponent format
                             let coefficient = tick_val / 10.0_f32.powi(log_value.floor() as i32);
                             let exponent = log_value.floor() as i32;
                             if (coefficient - 1.0).abs() < 0.001 {
-                                format!("10^{}", exponent)
+                                format!("10^{exponent}")
                             } else {
-                                format!("{:.1}·10^{}", coefficient, exponent)
+                                format!("{coefficient:.1}·10^{exponent}")
                             }
                         }
                     }
                 } else {
-                    format!("{:.1}", display_val)
+                    format!("{display_val:.1}")
                 };
 
                 // Handle logarithmic labels with proper superscript formatting
-                if y_scale == Scale::Log && (tick_label_text.contains("10^") || tick_label_text.contains("·10^")) {
+                if y_scale == Scale::Log
+                    && (tick_label_text.contains("10^") || tick_label_text.contains("·10^"))
+                {
                     // Handle both "10^exponent" and "coefficient·10^exponent" formats
                     if let Some(cap) = tick_label_text.strip_prefix("10^") {
                         // Simple "10^exponent" format
                         let exponent = cap.parse::<i32>().unwrap_or(0);
-                        
+
                         let base_text_node = SvgNodeText::new("10");
                         let exponent_tspan = svg::node::element::TSpan::new()
                             .set("dy", "-0.4em") // Shift exponent upwards
                             .set("dx", "-0.2em") // Shift left to align with base
                             .add(SvgNodeText::new(exponent.to_string()));
-                        
+
                         let tick_label_svg = Text::new()
                             .set(
                                 "x",
-                                tick_x_left
-                                    - tick_config.text_padding
-                                    - (if tick_direction > 0.0 {
-                                        tick_config.length
-                                    } else {
-                                        tick_config.length
-                                    }),
+                                tick_x_left - tick_config.text_padding - tick_config.length,
                             )
                             .set("y", screen_y)
                             .set("font-family", font)
@@ -625,23 +640,17 @@ where
                         let coefficient = &tick_label_text[..pos];
                         let exponent_str = &tick_label_text[pos + 4..]; // Skip "·10^"
                         let exponent = exponent_str.parse::<i32>().unwrap_or(0);
-                        
-                        let base_text_node = SvgNodeText::new(&format!("{}·10", coefficient));
+
+                        let base_text_node = SvgNodeText::new(format!("{coefficient}·10"));
                         let exponent_tspan = svg::node::element::TSpan::new()
                             .set("dy", "-0.4em") // Shift exponent upwards
                             .set("dx", "-0.2em") // Shift left to align with base
                             .add(SvgNodeText::new(exponent.to_string()));
-                        
+
                         let tick_label_svg = Text::new()
                             .set(
                                 "x",
-                                tick_x_left
-                                    - tick_config.text_padding
-                                    - (if tick_direction > 0.0 {
-                                        tick_config.length
-                                    } else {
-                                        tick_config.length
-                                    }),
+                                tick_x_left - tick_config.text_padding - tick_config.length,
                             )
                             .set("y", screen_y)
                             .set("font-family", font)
@@ -657,13 +666,7 @@ where
                         let tick_label_svg = Text::new()
                             .set(
                                 "x",
-                                tick_x_left
-                                    - tick_config.text_padding
-                                    - (if tick_direction > 0.0 {
-                                        tick_config.length
-                                    } else {
-                                        tick_config.length
-                                    }),
+                                tick_x_left - tick_config.text_padding - tick_config.length,
                             )
                             .set("y", screen_y)
                             .set("font-family", font)
@@ -679,13 +682,7 @@ where
                     let tick_label_svg = Text::new()
                         .set(
                             "x",
-                            tick_x_left
-                                - tick_config.text_padding
-                                - (if tick_direction > 0.0 {
-                                    tick_config.length
-                                } else {
-                                    tick_config.length
-                                }),
+                            tick_x_left - tick_config.text_padding - tick_config.length,
                         )
                         .set("y", screen_y)
                         .set("font-family", font)
@@ -718,7 +715,7 @@ where
                             .set("y2", screen_y)
                             .set("stroke", minor_grid_color_svg.clone())
                             .set("stroke-width", grid_config.minor_line_width);
-                        
+
                         // Apply the same dash pattern as the major grid
                         match grid {
                             Grid::Dotted => {
@@ -729,7 +726,7 @@ where
                             }
                             Grid::Solid | Grid::None => {}
                         }
-                        
+
                         document = document.add(minor_grid_line);
                     }
                 }
@@ -745,7 +742,10 @@ where
                         let minor_tick_line_left = SvgLine::new()
                             .set("x1", tick_x_left)
                             .set("y1", screen_y)
-                            .set("x2", tick_x_left - tick_config.minor_tick_length * tick_direction)
+                            .set(
+                                "x2",
+                                tick_x_left - tick_config.minor_tick_length * tick_direction,
+                            )
                             .set("y2", screen_y)
                             .set("stroke", minor_tick_color_svg.clone())
                             .set("stroke-width", 0.5);
@@ -756,7 +756,10 @@ where
                     let minor_tick_line_right = SvgLine::new()
                         .set("x1", tick_x_right)
                         .set("y1", screen_y)
-                        .set("x2", tick_x_right + tick_config.minor_tick_length * tick_direction)
+                        .set(
+                            "x2",
+                            tick_x_right + tick_config.minor_tick_length * tick_direction,
+                        )
                         .set("y2", screen_y)
                         .set("stroke", minor_tick_color_svg.clone())
                         .set("stroke-width", 0.5);

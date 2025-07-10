@@ -20,7 +20,8 @@ use resvg::usvg;
 use tiny_skia as skia;
 
 #[derive(Builder)]
-pub struct Plot<'a, T: PlotValue = f32, const N: usize = 1> {
+pub struct Plot<'a, T: PlotValue = f32> {
+    // Removed const N: usize
     // --- Plot Settings ---
     #[builder(default = (800, 600))]
     pub dimensions: (i32, i32),
@@ -70,10 +71,11 @@ pub struct Plot<'a, T: PlotValue = f32, const N: usize = 1> {
     pub grid_config: GridConfig,
 
     // --- Data ---
-    pub data: [Series<'a, T>; N],
+    pub data: Vec<Series<'a, T>>,
 }
 
-impl<'a, T: PlotValue, const N: usize> Plot<'a, T, N> {
+impl<'a, T: PlotValue> Plot<'a, T> {
+    // Removed const N: usize
     /// Saves the plot as an SVG file
     pub fn to_svg(&self, filename: &str) -> Result<(), std::io::Error> {
         let document = self.plot()?;
@@ -183,7 +185,10 @@ impl<'a, T: PlotValue, const N: usize> Plot<'a, T, N> {
                         if self.x_scale == Scale::Log && min_x.to_f32() > 0.0 {
                             let min_log = min_x.to_f32().log10().floor();
                             let max_log = max_x.to_f32().log10().ceil();
-                            (T::from_f32(10.0_f32.powi(min_log as i32)), T::from_f32(10.0_f32.powi(max_log as i32)))
+                            (
+                                T::from_f32(10.0_f32.powi(min_log as i32)),
+                                T::from_f32(10.0_f32.powi(max_log as i32)),
+                            )
                         } else {
                             (min_x, max_x)
                         }
@@ -217,7 +222,10 @@ impl<'a, T: PlotValue, const N: usize> Plot<'a, T, N> {
                         if self.y_scale == Scale::Log && min_y.to_f32() > 0.0 {
                             let min_log = min_y.to_f32().log10().floor();
                             let max_log = max_y.to_f32().log10().ceil();
-                            (T::from_f32(10.0_f32.powi(min_log as i32)), T::from_f32(10.0_f32.powi(max_log as i32)))
+                            (
+                                T::from_f32(10.0_f32.powi(min_log as i32)),
+                                T::from_f32(10.0_f32.powi(max_log as i32)),
+                            )
                         } else {
                             (min_y, max_y)
                         }
@@ -281,8 +289,7 @@ impl<'a, T: PlotValue, const N: usize> Plot<'a, T, N> {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!(
-                    "Plot area is too small (width: {}, height: {}). Check dimensions and margins.",
-                    plot_area_width, plot_area_height
+                    "Plot area is too small (width: {plot_area_width}, height: {plot_area_height}). Check dimensions and margins."
                 ),
             ));
         }
@@ -295,22 +302,31 @@ impl<'a, T: PlotValue, const N: usize> Plot<'a, T, N> {
                 let data_x_f32 = data_x.to_f32();
                 let actual_x_min_f32 = actual_x_min.to_f32();
                 let actual_x_max_f32 = actual_x_max.to_f32();
-                
+
                 // Apply logarithmic transformation if needed
                 if self.x_scale == Scale::Log {
                     // Ensure positive values for logarithmic scale
                     let safe_data_x = if data_x_f32 > 0.0 { data_x_f32 } else { 0.001 };
-                    let safe_min = if actual_x_min_f32 > 0.0 { actual_x_min_f32 } else { 1.0 };
-                    let safe_max = if actual_x_max_f32 > 0.0 { actual_x_max_f32 } else { 10.0 };
-                    
+                    let safe_min = if actual_x_min_f32 > 0.0 {
+                        actual_x_min_f32
+                    } else {
+                        1.0
+                    };
+                    let safe_max = if actual_x_max_f32 > 0.0 {
+                        actual_x_max_f32
+                    } else {
+                        10.0
+                    };
+
                     let log_data_x = safe_data_x.log10();
                     let log_min = safe_min.log10();
                     let log_max = safe_max.log10();
-                    
+
                     if (log_max - log_min).abs() < f32::EPSILON {
                         plot_area_x_start + plot_area_width / 2.0
                     } else {
-                        plot_area_x_start + ((log_data_x - log_min) / (log_max - log_min) * plot_area_width)
+                        plot_area_x_start
+                            + ((log_data_x - log_min) / (log_max - log_min) * plot_area_width)
                     }
                 } else {
                     plot_area_x_start
@@ -326,18 +342,26 @@ impl<'a, T: PlotValue, const N: usize> Plot<'a, T, N> {
                 let data_y_f32 = data_y.to_f32();
                 let actual_y_min_f32 = actual_y_min.to_f32();
                 let actual_y_max_f32 = actual_y_max.to_f32();
-                
+
                 // Apply logarithmic transformation if needed
                 if self.y_scale == Scale::Log {
                     // Ensure positive values for logarithmic scale
                     let safe_data_y = if data_y_f32 > 0.0 { data_y_f32 } else { 0.001 };
-                    let safe_min = if actual_y_min_f32 > 0.0 { actual_y_min_f32 } else { 1.0 };
-                    let safe_max = if actual_y_max_f32 > 0.0 { actual_y_max_f32 } else { 10.0 };
-                    
+                    let safe_min = if actual_y_min_f32 > 0.0 {
+                        actual_y_min_f32
+                    } else {
+                        1.0
+                    };
+                    let safe_max = if actual_y_max_f32 > 0.0 {
+                        actual_y_max_f32
+                    } else {
+                        10.0
+                    };
+
                     let log_data_y = safe_data_y.log10();
                     let log_min = safe_min.log10();
                     let log_max = safe_max.log10();
-                    
+
                     if (log_max - log_min).abs() < f32::EPSILON {
                         plot_area_y_start + plot_area_height / 2.0
                     } else {
@@ -464,7 +488,7 @@ impl<'a, T: PlotValue, const N: usize> Plot<'a, T, N> {
             } else {
                 min_val
             };
-            
+
             let safe_max_val = if max_val <= 0.0 {
                 safe_min_val * 1000.0 // Ensure we have a reasonable range
             } else {

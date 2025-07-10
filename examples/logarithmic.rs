@@ -31,7 +31,7 @@ fn main() {
         .grid(Grid::Solid)
         .minor_grid(MinorGrid::YAxis)
         .y_scale(Scale::Log)
-        .data([
+        .data(vec![
             Series::builder()
                 .name("10^(x/10)")
                 .color(Color::Red)
@@ -57,6 +57,6 @@ fn main() {
 
     match log_plot.to_svg("./gallery/logarithmic.svg") {
         Ok(_) => println!("Logarithmic plot saved as SVG."),
-        Err(e) => eprintln!("Failed to save SVG: {}", e),
+        Err(e) => eprintln!("Failed to save SVG: {e}"),
     }
 }

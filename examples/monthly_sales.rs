@@ -23,7 +23,7 @@ fn main() {
         .margin(Margin::default().add_left(10.0))
         .axis(Axis::BottomLeft)
         .tick(Tick::Outward)
-        .data([
+        .data(vec![
             Series::builder()
                 .name("Product A")
                 .color(Color::Blue)
@@ -104,13 +104,13 @@ fn main() {
     // Plot the data to a PNG file in the gallery
     match plot.to_svg("./gallery/monthly_sales.svg") {
         Ok(_) => println!("Plot created successfully at ./gallery/monthly_sales.svg"),
-        Err(e) => eprintln!("Error creating plot: {:?}", e),
+        Err(e) => eprintln!("Error creating plot: {e:?}"),
     }
 
     // Optionally, render to PNG with feature = ["png"]
     #[cfg(feature = "png")]
     match plot.to_png("./gallery/monthly_sales.png", 1.0) {
         Ok(_) => println!("Plot created successfully at ./gallery/monthly_sales.png"),
-        Err(e) => eprintln!("Error creating plot: {:?}", e),
+        Err(e) => eprintln!("Error creating plot: {e:?}"),
     }
 }
