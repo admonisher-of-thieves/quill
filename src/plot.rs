@@ -236,11 +236,7 @@ impl<'a, T: PlotValue> Plot<'a, T> {
         };
 
         // Calculate legend dimensions - ONLY for series that have show_legend = true
-        let visible_series: Vec<&Series<T>> = self
-            .data
-            .iter()
-            .filter(|s| s.show_legend)
-            .collect();
+        let visible_series: Vec<&Series<T>> = self.data.iter().filter(|s| s.show_legend).collect();
         let visible_series_count = visible_series.len();
 
         let mut calculated_max_series_name_width = 0.0f32;
