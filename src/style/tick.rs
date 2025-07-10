@@ -11,6 +11,10 @@ pub struct TickConfig {
     pub density_y: f32,
     pub minor_tick_length: f32,
     pub minor_tick_color: Color,
+    pub show_x_decimals: bool,
+    pub show_y_decimals: bool,
+    pub x_decimals: usize, // Number of decimal places for X axis
+    pub y_decimals: usize, // Number of decimal places for Y axis
 }
 
 impl Default for TickConfig {
@@ -25,6 +29,10 @@ impl Default for TickConfig {
             density_y: 50.0,
             minor_tick_length: 3.0,
             minor_tick_color: Color::Black,
+            show_x_decimals: true,
+            show_y_decimals: true,
+            x_decimals: 2,
+            y_decimals: 2,
         }
     }
 }

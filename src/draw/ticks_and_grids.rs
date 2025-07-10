@@ -295,6 +295,8 @@ where
                                     }
                                 }
                             }
+                        } else if tick_config.show_x_decimals {
+                            format!("{:.1$}", tick_val / x_scale_factor, tick_config.x_decimals)
                         } else {
                             format!("{:.1}", tick_val / x_scale_factor)
                         };
@@ -602,7 +604,10 @@ where
                             }
                         }
                     }
+                } else if tick_config.show_y_decimals {
+                    format!("{:.1$}", display_val, tick_config.y_decimals)
                 } else {
+                    // For non-integers when show_y_decimals is false, show 1 decimal place
                     format!("{display_val:.1}")
                 };
 
