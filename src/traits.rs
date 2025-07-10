@@ -98,3 +98,21 @@ impl PlotValue for i64 {
         val as i64
     }
 }
+
+impl PlotValue for u32 {
+    fn to_f32(self) -> f32 {
+        self as f32
+    }
+    fn max_value() -> Self {
+        u32::MAX
+    }
+    fn min_value() -> Self {
+        u32::MIN
+    }
+    fn epsilon() -> Self {
+        1
+    }
+    fn from_f32(val: f32) -> Self {
+        val as u32
+    }
+}
