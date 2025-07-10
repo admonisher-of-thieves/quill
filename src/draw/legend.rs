@@ -21,7 +21,7 @@ pub fn draw_legend<X: PlotValue, Y: PlotValue>(
         .set("y", legend_y_base)
         .set("width", legend_actual_box_width)
         .set("height", legend_height)
-        .set("fill", legend_config.border_color.to_hex_string())
+        .set("fill", legend_config.background_color.to_hex_string())
         .set("stroke", legend_config.border_color.to_hex_string())
         .set("stroke-width", 1.0);
     let mut document = document.add(legend_box_svg);
