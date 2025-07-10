@@ -235,37 +235,44 @@ impl<'a, T: PlotValue> Plot<'a, T> {
             Range::Manual { min, max } => (min, max),
         };
 
-        // Calculate legend dimensions
+        // Calculate legend dimensions - ONLY for series that have show_legend = true
+        let visible_series: Vec<&Series<T>> = self
+            .data
+            .iter()
+            .filter(|s| s.show_legend)
+            .collect();
+        let visible_series_count = visible_series.len();
+
         let mut calculated_max_series_name_width = 0.0f32;
-        if self.legend != Legend::None && !self.data.is_empty() {
-            calculated_max_series_name_width = self
-                .data
+        if self.legend != Legend::None && visible_series_count > 0 {
+            calculated_max_series_name_width = visible_series
                 .iter()
                 .map(|s| s.name.len() as f32 * self.legend_config.font_size * 0.6)
                 .fold(0.0f32, |a, b| a.max(b));
         }
 
-        let legend_actual_box_width = if self.legend != Legend::None && !self.data.is_empty() {
+        let legend_actual_box_width = if self.legend != Legend::None && visible_series_count > 0 {
             self.legend_config.color_swatch_width
                 + self.legend_config.text_offset
                 + calculated_max_series_name_width
         } else {
             0.0
         };
-        let legend_height = if self.legend != Legend::None && !self.data.is_empty() {
-            self.data.len() as f32 * self.legend_config.item_height
+
+        let legend_height = if self.legend != Legend::None && visible_series_count > 0 {
+            visible_series_count as f32 * self.legend_config.item_height
                 + self.legend_config.padding * 2.0
         } else {
             0.0
         };
 
-        // Adjust margins based on legend position
+        // Keep original margin calculations (don't adjust margins based on legend visibility)
         let current_effective_margin_left = self.margin.left;
         let mut current_effective_margin_right = self.margin.right;
         let current_effective_margin_top = self.margin.top;
         let current_effective_margin_bottom = self.margin.bottom;
 
-        if self.legend != Legend::None && !self.data.is_empty() {
+        if self.legend != Legend::None && visible_series_count > 0 {
             match self.legend {
                 Legend::TopRightOutside
                 | Legend::RightCenterOutside
@@ -641,7 +648,7 @@ impl<'a, T: PlotValue> Plot<'a, T> {
 
             document = draw_legend(
                 document,
-                &self.data[..],
+                &visible_series, // Only pass visible series
                 self.font,
                 &self.legend_config,
                 legend_x_base,
