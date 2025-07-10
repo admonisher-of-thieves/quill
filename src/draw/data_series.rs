@@ -32,7 +32,7 @@ where
                     Line::Dashed => path = path.set("stroke-dasharray", "5 5"),
                     Line::Dotted => {
                         path = path
-                            .set("stroke-dasharray", "1 3")
+                            .set("stroke-dasharray", "0 4")
                             .set("stroke-linecap", "round")
                     }
                     _ => {}
