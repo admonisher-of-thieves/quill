@@ -1,8 +1,12 @@
 use crate::{
+    Color, PlotValue,
     draw::{
         draw_axis_lines, draw_data_series, draw_legend, draw_ticks_and_grids, draw_title,
         draw_x_label, draw_y_label,
-    }, elements::*, series::Series, style::*, Color, PlotValue
+    },
+    elements::*,
+    series::Series,
+    style::*,
 };
 use bon::Builder;
 use svg::{
@@ -47,7 +51,7 @@ pub struct Plot<'a, X: PlotValue = f32, Y: PlotValue = f32> {
     pub y_scale: Scale,
     #[builder(default = "Times New Roman")]
     pub font: &'a str,
-    #[builder(default = Color::White)] 
+    #[builder(default = Color::White)]
     pub background_color: Color,
 
     // --- Style Configurations ---
