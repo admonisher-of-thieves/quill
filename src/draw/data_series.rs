@@ -28,8 +28,14 @@ where
                     .set("fill", "none")
                     .set("stroke", series_color_hex.clone())
                     .set("stroke-width", series.line_width);
-                if series.line == Line::Dashed {
-                    path = path.set("stroke-dasharray", "5 5");
+                match series.line {
+                    Line::Dashed => path = path.set("stroke-dasharray", "5 5"),
+                    Line::Dotted => {
+                        path = path
+                            .set("stroke-dasharray", "1 3")
+                            .set("stroke-linecap", "round")
+                    }
+                    _ => {}
                 }
                 data_group = data_group.add(path);
             }
