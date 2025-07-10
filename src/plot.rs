@@ -1,12 +1,8 @@
 use crate::{
-    PlotValue,
     draw::{
         draw_axis_lines, draw_data_series, draw_legend, draw_ticks_and_grids, draw_title,
         draw_x_label, draw_y_label,
-    },
-    elements::*,
-    series::Series,
-    style::*,
+    }, elements::*, series::Series, style::*, Color, PlotValue
 };
 use bon::Builder;
 use svg::{
@@ -51,6 +47,8 @@ pub struct Plot<'a, X: PlotValue = f32, Y: PlotValue = f32> {
     pub y_scale: Scale,
     #[builder(default = "Times New Roman")]
     pub font: &'a str,
+    #[builder(default = Color::White)] 
+    pub background_color: Color,
 
     // --- Style Configurations ---
     #[builder(default = Margin::default())]
@@ -157,7 +155,7 @@ impl<'a, X: PlotValue, Y: PlotValue> Plot<'a, X, Y> {
             .set("y", 0)
             .set("width", total_width)
             .set("height", total_height)
-            .set("fill", "white");
+            .set("fill", self.background_color.to_hex_string()); // Use configured color
         document = document.add(background);
 
         // Determine x_min, x_max, y_min, y_max based on Range
