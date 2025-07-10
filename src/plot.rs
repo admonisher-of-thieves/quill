@@ -20,7 +20,7 @@ use resvg::usvg;
 use tiny_skia as skia;
 
 #[derive(Builder)]
-pub struct Plot<'a, T: PlotValue = f32> {
+pub struct Plot<'a, X: PlotValue = f32, Y: PlotValue = f32> {
     // Removed const N: usize
     // --- Plot Settings ---
     #[builder(default = (800, 600))]
@@ -32,9 +32,9 @@ pub struct Plot<'a, T: PlotValue = f32> {
     #[builder(default = "")]
     pub y_label: &'a str,
     #[builder(default = Range::Auto)]
-    pub x_range: Range<T>,
+    pub x_range: Range<X>,
     #[builder(default = Range::Auto)]
-    pub y_range: Range<T>,
+    pub y_range: Range<Y>,
     #[builder(default = Legend::None)]
     pub legend: Legend,
     #[builder(default = Axis::Box)]
@@ -71,10 +71,10 @@ pub struct Plot<'a, T: PlotValue = f32> {
     pub grid_config: GridConfig,
 
     // --- Data ---
-    pub data: Vec<Series<'a, T>>,
+    pub data: Vec<Series<'a, X, Y>>,
 }
 
-impl<'a, T: PlotValue> Plot<'a, T> {
+impl<'a, X: PlotValue, Y: PlotValue> Plot<'a, X, Y> {
     // Removed const N: usize
     /// Saves the plot as an SVG file
     pub fn to_svg(&self, filename: &str) -> Result<(), std::io::Error> {
@@ -164,10 +164,10 @@ impl<'a, T: PlotValue> Plot<'a, T> {
         let (actual_x_min, actual_x_max) = match self.x_range {
             Range::Auto => {
                 if self.data.is_empty() || self.data.iter().all(|s| s.data.is_empty()) {
-                    (T::from_f32(0.0), T::from_f32(1.0))
+                    (X::from_f32(0.0), X::from_f32(1.0))
                 } else {
-                    let mut min_x = T::max_value();
-                    let mut max_x = T::min_value();
+                    let mut min_x = X::max_value();
+                    let mut max_x = X::min_value();
                     for series in &self.data {
                         for (x, _) in &series.data {
                             if *x < min_x {
@@ -178,16 +178,16 @@ impl<'a, T: PlotValue> Plot<'a, T> {
                             }
                         }
                     }
-                    if (max_x - min_x) < T::epsilon() {
-                        (min_x - T::from_f32(0.5), max_x + T::from_f32(0.5))
+                    if (max_x - min_x) < X::epsilon() {
+                        (min_x - X::from_f32(0.5), max_x + X::from_f32(0.5))
                     } else {
                         // For logarithmic X scale, expand to nice power-of-10 bounds
                         if self.x_scale == Scale::Log && min_x.to_f32() > 0.0 {
                             let min_log = min_x.to_f32().log10().floor();
                             let max_log = max_x.to_f32().log10().ceil();
                             (
-                                T::from_f32(10.0_f32.powi(min_log as i32)),
-                                T::from_f32(10.0_f32.powi(max_log as i32)),
+                                X::from_f32(10.0_f32.powi(min_log as i32)),
+                                X::from_f32(10.0_f32.powi(max_log as i32)),
                             )
                         } else {
                             (min_x, max_x)
@@ -201,10 +201,10 @@ impl<'a, T: PlotValue> Plot<'a, T> {
         let (actual_y_min, actual_y_max) = match self.y_range {
             Range::Auto => {
                 if self.data.is_empty() || self.data.iter().all(|s| s.data.is_empty()) {
-                    (T::from_f32(0.0), T::from_f32(1.0))
+                    (Y::from_f32(0.0), Y::from_f32(1.0))
                 } else {
-                    let mut min_y = T::max_value();
-                    let mut max_y = T::min_value();
+                    let mut min_y = Y::max_value();
+                    let mut max_y = Y::min_value();
                     for series in &self.data {
                         for (_, y) in &series.data {
                             if *y < min_y {
@@ -215,16 +215,16 @@ impl<'a, T: PlotValue> Plot<'a, T> {
                             }
                         }
                     }
-                    if (max_y - min_y) < T::epsilon() {
-                        (min_y - T::from_f32(0.5), max_y + T::from_f32(0.5))
+                    if (max_y - min_y) < Y::epsilon() {
+                        (min_y - Y::from_f32(0.5), max_y + Y::from_f32(0.5))
                     } else {
                         // For logarithmic Y scale, expand to nice power-of-10 bounds
                         if self.y_scale == Scale::Log && min_y.to_f32() > 0.0 {
                             let min_log = min_y.to_f32().log10().floor();
                             let max_log = max_y.to_f32().log10().ceil();
                             (
-                                T::from_f32(10.0_f32.powi(min_log as i32)),
-                                T::from_f32(10.0_f32.powi(max_log as i32)),
+                                Y::from_f32(10.0_f32.powi(min_log as i32)),
+                                Y::from_f32(10.0_f32.powi(max_log as i32)),
                             )
                         } else {
                             (min_y, max_y)
@@ -236,7 +236,8 @@ impl<'a, T: PlotValue> Plot<'a, T> {
         };
 
         // Calculate legend dimensions - ONLY for series that have show_legend = true
-        let visible_series: Vec<&Series<T>> = self.data.iter().filter(|s| s.show_legend).collect();
+        let visible_series: Vec<&Series<X, Y>> =
+            self.data.iter().filter(|s| s.show_legend).collect();
         let visible_series_count = visible_series.len();
 
         let mut calculated_max_series_name_width = 0.0f32;
@@ -298,8 +299,8 @@ impl<'a, T: PlotValue> Plot<'a, T> {
         }
 
         // Helper closures to map data coordinates to screen coordinates
-        let map_x = |data_x: T| -> f32 {
-            if (actual_x_max - actual_x_min) < T::epsilon() {
+        let map_x = |data_x: X| -> f32 {
+            if (actual_x_max - actual_x_min) < X::epsilon() {
                 plot_area_x_start + plot_area_width / 2.0
             } else {
                 let data_x_f32 = data_x.to_f32();
@@ -338,8 +339,8 @@ impl<'a, T: PlotValue> Plot<'a, T> {
                 }
             }
         };
-        let map_y = |data_y: T| -> f32 {
-            if (actual_y_max - actual_y_min) < T::epsilon() {
+        let map_y = |data_y: Y| -> f32 {
+            if (actual_y_max - actual_y_min) < Y::epsilon() {
                 plot_area_y_start + plot_area_height / 2.0
             } else {
                 let data_y_f32 = data_y.to_f32();
@@ -548,8 +549,8 @@ impl<'a, T: PlotValue> Plot<'a, T> {
             plot_area_height,
             &x_ticks,
             &y_ticks,
-            |x_f32| map_x(T::from_f32(x_f32)),
-            |y_f32| map_y(T::from_f32(y_f32)),
+            |x_f32| map_x(X::from_f32(x_f32)),
+            |y_f32| map_y(Y::from_f32(y_f32)),
         );
 
         // --- Clipping Path for Plot Area ---

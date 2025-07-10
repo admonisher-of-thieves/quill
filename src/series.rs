@@ -2,8 +2,8 @@ use crate::{Color, Interpolation, Line, Marker};
 use bon::Builder;
 
 #[derive(Clone, Builder)]
-pub struct Series<'a, T = f32> {
-    pub data: Vec<(T, T)>,
+pub struct Series<'a, X = f32, Y = f32> {
+    pub data: Vec<(X, Y)>,
     #[builder(default = "")]
     pub name: &'a str,
     #[builder(default = Color::Black, into)]
@@ -22,7 +22,7 @@ pub struct Series<'a, T = f32> {
     pub show_legend: bool,
 }
 
-impl<'a, T> Default for Series<'a, T> {
+impl<'a, X, Y> Default for Series<'a, X, Y> {
     fn default() -> Self {
         Series::builder().data(vec![]).build()
     }

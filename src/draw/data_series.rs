@@ -3,15 +3,12 @@ use crate::elements::{Interpolation, Line, Marker};
 use crate::series::Series;
 use svg::node::element::{Group, Path, Rectangle};
 
-pub fn draw_data_series<T, Fx, Fy>(
-    data: &[Series<T>],
-    map_x: Fx,
-    map_y: Fy,
-) -> Group
+pub fn draw_data_series<X, Y, Fx, Fy>(data: &[Series<X, Y>], map_x: Fx, map_y: Fy) -> Group
 where
-    T: PlotValue,
-    Fx: Fn(T) -> f32,
-    Fy: Fn(T) -> f32,
+    X: PlotValue,
+    Y: PlotValue,
+    Fx: Fn(X) -> f32,
+    Fy: Fn(Y) -> f32,
 {
     let mut data_group = Group::new().set("clip-path", "url(#plotAreaClip)");
     for series in data {
@@ -85,11 +82,12 @@ where
 }
 
 // Helper functions for different interpolation types
-fn draw_linear_path<T, Fx, Fy>(series: &Series<T>, map_x: &Fx, map_y: &Fy) -> Option<Path>
+fn draw_linear_path<X, Y, Fx, Fy>(series: &Series<X, Y>, map_x: &Fx, map_y: &Fy) -> Option<Path>
 where
-    T: PlotValue,
-    Fx: Fn(T) -> f32,
-    Fy: Fn(T) -> f32,
+    X: PlotValue,
+    Y: PlotValue,
+    Fx: Fn(X) -> f32,
+    Fy: Fn(Y) -> f32,
 {
     if series.data.is_empty() {
         return None;
@@ -105,11 +103,12 @@ where
     Some(Path::new().set("d", line_data))
 }
 
-fn draw_step_path<T, Fx, Fy>(series: &Series<T>, map_x: &Fx, map_y: &Fy) -> Option<Path>
+fn draw_step_path<X, Y, Fx, Fy>(series: &Series<X, Y>, map_x: &Fx, map_y: &Fy) -> Option<Path>
 where
-    T: PlotValue,
-    Fx: Fn(T) -> f32,
-    Fy: Fn(T) -> f32,
+    X: PlotValue,
+    Y: PlotValue,
+    Fx: Fn(X) -> f32,
+    Fy: Fn(Y) -> f32,
 {
     if series.data.is_empty() {
         return None;
@@ -132,11 +131,12 @@ where
     Some(Path::new().set("d", line_data))
 }
 
-fn draw_bezier_path<T, Fx, Fy>(series: &Series<T>, map_x: &Fx, map_y: &Fy) -> Option<Path>
+fn draw_bezier_path<X, Y, Fx, Fy>(series: &Series<X, Y>, map_x: &Fx, map_y: &Fy) -> Option<Path>
 where
-    T: PlotValue,
-    Fx: Fn(T) -> f32,
-    Fy: Fn(T) -> f32,
+    X: PlotValue,
+    Y: PlotValue,
+    Fx: Fn(X) -> f32,
+    Fy: Fn(Y) -> f32,
 {
     if series.data.len() < 2 {
         return None;
@@ -207,11 +207,12 @@ where
     Some(Path::new().set("d", line_data))
 }
 
-fn draw_spline_path<T, Fx, Fy>(series: &Series<T>, map_x: &Fx, map_y: &Fy) -> Option<Path>
+fn draw_spline_path<X, Y, Fx, Fy>(series: &Series<X, Y>, map_x: &Fx, map_y: &Fy) -> Option<Path>
 where
-    T: PlotValue,
-    Fx: Fn(T) -> f32,
-    Fy: Fn(T) -> f32,
+    X: PlotValue,
+    Y: PlotValue,
+    Fx: Fn(X) -> f32,
+    Fy: Fn(Y) -> f32,
 {
     if series.data.len() < 3 {
         // Fall back to linear for insufficient points

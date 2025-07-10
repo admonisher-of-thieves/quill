@@ -6,9 +6,9 @@ use svg::node::Text as SvgNodeText;
 use svg::node::element::{Rectangle, Text};
 
 #[allow(clippy::too_many_arguments)]
-pub fn draw_legend<T: PlotValue>(
+pub fn draw_legend<X: PlotValue, Y: PlotValue>(
     document: Document,
-    data: &[&Series<T>],
+    data: &[&Series<X, Y>],
     font: &str,
     legend_config: &LegendConfig,
     legend_x_base: f32,
