@@ -82,8 +82,10 @@ where
     let tick_label_color_svg = tick_config.label_color.to_hex_string();
     let tick_line_color_svg = tick_config.line_color.to_hex_string();
     let minor_tick_color_svg = tick_config.minor_tick_color.to_hex_string();
-    let grid_line_color_svg = grid_config.color.to_hex_string();
-    let minor_grid_color_svg = grid_config.minor_color.to_hex_string();
+    let x_grid_line_color_svg = grid_config.x_color.to_hex_string();
+    let y_grid_line_color_svg = grid_config.y_color.to_hex_string();
+    let minor_x_grid_color_svg = grid_config.minor_x_color.to_hex_string();
+    let minor_y_grid_color_svg = grid_config.minor_y_color.to_hex_string();
     let mut document = document;
 
     // Generate minor ticks for all scale types when enabled
@@ -224,36 +226,38 @@ where
         if screen_x >= plot_area_x_start - 0.1
             && screen_x <= plot_area_x_start + plot_area_width + 0.1
         {
-            match grid {
-                Grid::None => {}
-                Grid::Solid | Grid::Dashed | Grid::Dotted => {
-                    let mut skip_grid_line = false;
-                    if is_origin {
-                        skip_grid_line = true;
-                    }
-                    if axis == Axis::Box
-                        && (screen_x - (plot_area_x_start + plot_area_width)).abs() < 0.1
-                    {
-                        skip_grid_line = true;
-                    }
-                    if !skip_grid_line {
-                        let mut grid_line = SvgLine::new()
-                            .set("x1", screen_x)
-                            .set("y1", plot_area_y_start)
-                            .set("x2", screen_x)
-                            .set("y2", plot_area_y_start + plot_area_height)
-                            .set("stroke", grid_line_color_svg.clone())
-                            .set("stroke-width", grid_config.line_width);
-                        match grid {
-                            Grid::Dotted => {
-                                grid_line = grid_line.set("stroke-dasharray", "1 2");
-                            }
-                            Grid::Dashed => {
-                                grid_line = grid_line.set("stroke-dasharray", "4 4");
-                            }
-                            Grid::Solid | Grid::None => {}
+            if grid_config.show_x_grid {
+                match grid {
+                    Grid::None => {}
+                    Grid::Solid | Grid::Dashed | Grid::Dotted => {
+                        let mut skip_grid_line = false;
+                        if is_origin {
+                            skip_grid_line = true;
                         }
-                        document = document.add(grid_line);
+                        if axis == Axis::Box
+                            && (screen_x - (plot_area_x_start + plot_area_width)).abs() < 0.1
+                        {
+                            skip_grid_line = true;
+                        }
+                        if !skip_grid_line {
+                            let mut grid_line = SvgLine::new()
+                                .set("x1", screen_x)
+                                .set("y1", plot_area_y_start)
+                                .set("x2", screen_x)
+                                .set("y2", plot_area_y_start + plot_area_height)
+                                .set("stroke", x_grid_line_color_svg.clone())
+                                .set("stroke-width", grid_config.line_width);
+                            match grid {
+                                Grid::Dotted => {
+                                    grid_line = grid_line.set("stroke-dasharray", "1 2");
+                                }
+                                Grid::Dashed => {
+                                    grid_line = grid_line.set("stroke-dasharray", "4 4");
+                                }
+                                Grid::Solid | Grid::None => {}
+                            }
+                            document = document.add(grid_line);
+                        }
                     }
                 }
             }
@@ -454,7 +458,7 @@ where
             && screen_x <= plot_area_x_start + plot_area_width + 0.1
         {
             // Draw minor grid lines
-            if matches!(minor_grid, MinorGrid::XAxis | MinorGrid::Both) {
+            if grid_config.show_x_grid && matches!(minor_grid, MinorGrid::XAxis | MinorGrid::Both) {
                 match grid {
                     Grid::None => {}
                     Grid::Solid | Grid::Dashed | Grid::Dotted => {
@@ -463,7 +467,7 @@ where
                             .set("y1", plot_area_y_start)
                             .set("x2", screen_x)
                             .set("y2", plot_area_y_start + plot_area_height)
-                            .set("stroke", minor_grid_color_svg.clone())
+                            .set("stroke", minor_x_grid_color_svg.clone())
                             .set("stroke-width", grid_config.minor_line_width);
 
                         // Apply the same dash pattern as the major grid
@@ -524,34 +528,36 @@ where
         if screen_y >= plot_area_y_start - 0.1
             && screen_y <= plot_area_y_start + plot_area_height + 0.1
         {
-            match grid {
-                Grid::None => {}
-                Grid::Solid | Grid::Dashed | Grid::Dotted => {
-                    let mut skip_grid_line = false;
-                    if (screen_y - (plot_area_y_start + plot_area_height)).abs() < 0.1 {
-                        skip_grid_line = true;
-                    }
-                    if axis == Axis::Box && (screen_y - plot_area_y_start).abs() < 0.1 {
-                        skip_grid_line = true;
-                    }
-                    if !skip_grid_line {
-                        let mut grid_line = SvgLine::new()
-                            .set("x1", plot_area_x_start)
-                            .set("y1", screen_y)
-                            .set("x2", plot_area_x_start + plot_area_width)
-                            .set("y2", screen_y)
-                            .set("stroke", grid_line_color_svg.clone())
-                            .set("stroke-width", grid_config.line_width);
-                        match grid {
-                            Grid::Dotted => {
-                                grid_line = grid_line.set("stroke-dasharray", "1 2");
-                            }
-                            Grid::Dashed => {
-                                grid_line = grid_line.set("stroke-dasharray", "4 4");
-                            }
-                            Grid::Solid | Grid::None => {}
+            if grid_config.show_y_grid {
+                match grid {
+                    Grid::None => {}
+                    Grid::Solid | Grid::Dashed | Grid::Dotted => {
+                        let mut skip_grid_line = false;
+                        if (screen_y - (plot_area_y_start + plot_area_height)).abs() < 0.1 {
+                            skip_grid_line = true;
                         }
-                        document = document.add(grid_line);
+                        if axis == Axis::Box && (screen_y - plot_area_y_start).abs() < 0.1 {
+                            skip_grid_line = true;
+                        }
+                        if !skip_grid_line {
+                            let mut grid_line = SvgLine::new()
+                                .set("x1", plot_area_x_start)
+                                .set("y1", screen_y)
+                                .set("x2", plot_area_x_start + plot_area_width)
+                                .set("y2", screen_y)
+                                .set("stroke", y_grid_line_color_svg.clone())
+                                .set("stroke-width", grid_config.line_width);
+                            match grid {
+                                Grid::Dotted => {
+                                    grid_line = grid_line.set("stroke-dasharray", "1 2");
+                                }
+                                Grid::Dashed => {
+                                    grid_line = grid_line.set("stroke-dasharray", "4 4");
+                                }
+                                Grid::Solid | Grid::None => {}
+                            }
+                            document = document.add(grid_line);
+                        }
                     }
                 }
             }
@@ -709,7 +715,7 @@ where
             && screen_y <= plot_area_y_start + plot_area_height + 0.1
         {
             // Draw minor grid lines
-            if matches!(minor_grid, MinorGrid::YAxis | MinorGrid::Both) {
+            if grid_config.show_y_grid && matches!(minor_grid, MinorGrid::YAxis | MinorGrid::Both) {
                 match grid {
                     Grid::None => {}
                     Grid::Solid | Grid::Dashed | Grid::Dotted => {
@@ -718,7 +724,7 @@ where
                             .set("y1", screen_y)
                             .set("x2", plot_area_x_start + plot_area_width)
                             .set("y2", screen_y)
-                            .set("stroke", minor_grid_color_svg.clone())
+                            .set("stroke", minor_y_grid_color_svg.clone())
                             .set("stroke-width", grid_config.minor_line_width);
 
                         // Apply the same dash pattern as the major grid
