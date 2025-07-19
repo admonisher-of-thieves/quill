@@ -31,8 +31,10 @@ where
                 match series.line {
                     Line::Dashed => path = path.set("stroke-dasharray", "5 5"),
                     Line::Dotted => {
+                        let dot_spacing = series.line_width * 2.0;
+                        let dot_spacing = format!("0 {}", dot_spacing as u32);
                         path = path
-                            .set("stroke-dasharray", "0 4")
+                            .set("stroke-dasharray", &*dot_spacing)
                             .set("stroke-linecap", "round")
                     }
                     _ => {}
