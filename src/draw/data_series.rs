@@ -29,7 +29,14 @@ where
                     .set("stroke", series_color_hex.clone())
                     .set("stroke-width", series.line_width);
                 match series.line {
-                    Line::Dashed => path = path.set("stroke-dasharray", "5 5"),
+                    Line::Dashed => {
+                        path = {
+                            let dash_spacing = series.line_width * 2.0;
+                            let dash_spacing =
+                                format!("{} {}", dash_spacing as u32, dash_spacing as u32);
+                            path.set("stroke-dasharray", &*dash_spacing)
+                        }
+                    }
                     Line::Dotted => {
                         let dot_spacing = series.line_width * 2.0;
                         let dot_spacing = format!("0 {}", dot_spacing as u32);
