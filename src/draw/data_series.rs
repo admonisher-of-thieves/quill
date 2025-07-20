@@ -31,10 +31,10 @@ where
                 match series.line {
                     Line::Dashed => {
                         path = {
+                            let dash_len = series.line_width;
                             let dash_spacing = series.line_width * 2.0;
-                            let dash_spacing =
-                                format!("{} {}", dash_spacing as u32, dash_spacing as u32);
-                            path.set("stroke-dasharray", &*dash_spacing)
+                            let dash = format!("{} {}", dash_len as u32, dash_spacing as u32);
+                            path.set("stroke-dasharray", &*dash)
                         }
                     }
                     Line::Dotted => {
